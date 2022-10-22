@@ -39,7 +39,8 @@ class Transaction {
 }
 // Individual block on the chain
 class Block {
-    constructor(prevHash, transaction, ts = Date.now()) {
+    constructor(index, prevHash, transaction, ts = Date.now()) {
+        this.index = index;
         this.prevHash = prevHash;
         this.transaction = transaction;
         this.ts = ts;
@@ -57,7 +58,7 @@ class Chain {
     constructor() {
         this.chain = [
             // Genesis block
-            new Block('', new Transaction(100, 'genesis', 'satoshi'))
+            new Block(0, '', new Transaction(100, 'genesis', 'satoshi'))
         ];
     }
     // Most recent block
@@ -80,12 +81,12 @@ class Chain {
         }
     }
     // Add a new block to the chain if valid signature & proof of work is complete
-    addBlock(transaction, senderPublicKey, signature) {
+    addBlock(transaction, senderPublicKey, signature, payeePublicKey) {
         const verify = crypto.createVerify('SHA256');
         verify.update(transaction.toString());
         const isValid = verify.verify(senderPublicKey, signature);
         if (isValid) {
-            const newBlock = new Block(this.lastBlock.hash, transaction);
+            const newBlock = new Block(this.chain.length + 1, this.lastBlock.hash, transaction);
             this.mine(newBlock.nonce);
             this.chain.push(newBlock);
         }
@@ -96,6 +97,7 @@ Chain.instance = new Chain();
 // Wallet gives a user a public/private keypair
 class Wallet {
     constructor() {
+        this.coin = 0;
         const keypair = crypto.generateKeyPairSync('rsa', {
             modulusLength: 2048,
             publicKeyEncoding: { type: 'spki', format: 'pem' },
@@ -109,7 +111,13 @@ class Wallet {
         const sign = crypto.createSign('SHA256');
         sign.update(transaction.toString()).end();
         const signature = sign.sign(this.privateKey);
-        Chain.instance.addBlock(transaction, this.publicKey, signature);
+        Chain.instance.addBlock(transaction, this.publicKey, signature, payeePublicKey);
+        if (this.publicKey == payeePublicKey) {
+            this.coin += amount;
+        }
+    }
+    readProps() {
+        return this.coin;
     }
 }
 // Example usage
@@ -117,6 +125,4 @@ const satoshi = new Wallet();
 const bob = new Wallet();
 const alice = new Wallet();
 satoshi.sendMoney(50, bob.publicKey);
-bob.sendMoney(23, alice.publicKey);
-alice.sendMoney(5, bob.publicKey);
-console.log(Chain.instance);
+console.log('Satoshi balance is', bob.readProps());

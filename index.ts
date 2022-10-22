@@ -11,6 +11,7 @@ class Transaction {
   toString() {
     return JSON.stringify(this);
   }
+
 }
 
 // Individual block on the chain
@@ -19,6 +20,7 @@ class Block {
   public nonce = Math.round(Math.random() * 999999999);
 
   constructor(
+    public index : number,
     public prevHash: string, 
     public transaction: Transaction, 
     public ts = Date.now()
@@ -43,7 +45,7 @@ class Chain {
   constructor() {
     this.chain = [
       // Genesis block
-      new Block('', new Transaction(100, 'genesis', 'satoshi'))
+      new Block(0,'', new Transaction(100, 'genesis', 'satoshi'))
     ];
   }
 
@@ -74,14 +76,14 @@ class Chain {
   }
 
   // Add a new block to the chain if valid signature & proof of work is complete
-  addBlock(transaction: Transaction, senderPublicKey: string, signature: Buffer) {
+  addBlock(transaction: Transaction, senderPublicKey: string, signature: Buffer,payeePublicKey: string) {
     const verify = crypto.createVerify('SHA256');
     verify.update(transaction.toString());
 
     const isValid = verify.verify(senderPublicKey, signature);
 
     if (isValid) {
-      const newBlock = new Block(this.lastBlock.hash, transaction);
+      const newBlock = new Block(this.chain.length+1,this.lastBlock.hash, transaction);
       this.mine(newBlock.nonce);
       this.chain.push(newBlock);
     }
@@ -93,6 +95,7 @@ class Chain {
 class Wallet {
   public publicKey: string;
   public privateKey: string;
+  public coin:number = 0;
 
   constructor() {
     const keypair = crypto.generateKeyPairSync('rsa', {
@@ -112,8 +115,12 @@ class Wallet {
     sign.update(transaction.toString()).end();
 
     const signature = sign.sign(this.privateKey); 
-    Chain.instance.addBlock(transaction, this.publicKey, signature);
+    Chain.instance.addBlock(transaction, this.publicKey, signature,payeePublicKey);
   }
+  readProps(){
+    return this.coin;
+  }
+
 }
 
 // Example usage
@@ -123,7 +130,4 @@ const bob = new Wallet();
 const alice = new Wallet();
 
 satoshi.sendMoney(50, bob.publicKey);
-bob.sendMoney(23, alice.publicKey);
-alice.sendMoney(5, bob.publicKey);
-
-console.log(Chain.instance)
+console.log('Bob balance is', bob.readProps());
