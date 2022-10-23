@@ -9,7 +9,6 @@ import * as crypto from 'crypto';
 export class Chain {
     // Singleton instance
     public static instance = new Chain(); 
-    accounts: IWallet[] = [];
     chain: Block[];
   
     constructor() {
@@ -46,18 +45,10 @@ export class Chain {
     }
   
     // Add a new block to the chain if valid signature & proof of work is complete
-    addBlock(transaction: Transaction, senderPublicKey: string, signature: Buffer,payeePublicKey: string) {
-      const verify = crypto.createVerify('SHA256');
-      verify.update(transaction.toString());
-  
-      const isValid = verify.verify(senderPublicKey, signature);
-  
-      if (isValid) {
+    addBlock(transaction: Transaction, senderPublicKey: string,payeePublicKey: string) {
         const newBlock = new Block(this.chain.length+1,this.lastBlock.hash, transaction);
         this.mine(newBlock.nonce);
         this.chain.push(newBlock);
-        this.accounts.push({publicKey: senderPublicKey, privateKey: '', coin: transaction.amount});
-      }
     }
   
   }

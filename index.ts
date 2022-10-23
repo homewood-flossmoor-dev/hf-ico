@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io';
+import Chain from './lib/Chain';
 import { Wallet } from './lib/Wallet';
 const express = require('express');
 const app = express();
@@ -21,11 +22,17 @@ app.use(express.static(__dirname));
 app.get('/play', (req: any, res:any) => {
   res.sendFile(__dirname + '/client/play.html');
 });
+
+app.get('/admin', (req: any, res:any) => {
+  res.sendFile(__dirname + '/client/admin.html');
+});
+
   //waiting for connections on the play route
   let insert: User = {} as User;
 
   io.on('connection', (socket: Socket) => {
-    const wallet = new Wallet();
+
+    const wallet = new Wallet(socket.id);
 
     insert = {id: socket.id, name: 'player', info: wallet};
 
@@ -35,6 +42,7 @@ app.get('/play', (req: any, res:any) => {
     socket.on('pay', (payeeAdd: string) => {
       wallet.sendMoney(25, "payeeAdd");
       io.emit("info", insert);
+      io.emit("blocks", Chain.instance);
     });
 
     socket.on('disconnect', ()=>{

@@ -1,5 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const Chain_1 = __importDefault(require("./lib/Chain"));
 const Wallet_1 = require("./lib/Wallet");
 const express = require('express');
 const app = express();
@@ -13,6 +17,9 @@ app.use(express.static(__dirname));
 app.get('/play', (req, res) => {
     res.sendFile(__dirname + '/client/play.html');
 });
+app.get('/admin', (req, res) => {
+    res.sendFile(__dirname + '/client/admin.html');
+});
 //waiting for connections on the play route
 let insert = {};
 io.on('connection', (socket) => {
@@ -23,6 +30,8 @@ io.on('connection', (socket) => {
     socket.on('pay', (payeeAdd) => {
         wallet.sendMoney(25, "payeeAdd");
         io.emit("info", insert);
+        console.log(Chain_1.default.instance);
+        io.emit("blocks", Chain_1.default.instance);
     });
     socket.on('disconnect', () => {
         let b = _.findIndex(connected, function (el) { return el.id == socket.id; });
