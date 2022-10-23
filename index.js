@@ -29,7 +29,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const crypto = __importStar(require("crypto"));
 const Block_1 = __importDefault(require("./lib/Block"));
 const Transaction_1 = __importDefault(require("./lib/Transaction"));
-//wallet
+const express_1 = __importDefault(require("express"));
+const app = (0, express_1.default)();
+app.get('/', (req, res) => {
+    res.send('<h1>Hello world</h1>');
+});
+app.listen(3000, () => {
+    console.log('listening on *:3000');
+});
 class Wallet {
     constructor() {
         this.coin = 0;
@@ -55,6 +62,7 @@ class Wallet {
 // The blockchain
 class Chain {
     constructor() {
+        this.accounts = [];
         this.chain = [
             // Genesis block
             new Block_1.default(0, '', new Transaction_1.default(100, 'genesis', 'satoshi'))
@@ -88,6 +96,7 @@ class Chain {
             const newBlock = new Block_1.default(this.chain.length + 1, this.lastBlock.hash, transaction);
             this.mine(newBlock.nonce);
             this.chain.push(newBlock);
+            this.accounts.push({ publicKey: senderPublicKey, privateKey: '', coin: transaction.amount });
         }
     }
 }
@@ -97,5 +106,3 @@ Chain.instance = new Chain();
 const satoshi = new Wallet();
 const bob = new Wallet();
 const alice = new Wallet();
-satoshi.sendMoney(50, bob.publicKey);
-console.log(bob.readProps());

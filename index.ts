@@ -1,8 +1,26 @@
 import * as crypto from 'crypto';
 import Block from './lib/Block';
 import Transaction from './lib/Transaction';
+import express from "express";
 
-//wallet
+const app = express();
+
+
+app.get('/', (req, res) => {
+  res.send('<h1>Hello world</h1>');
+});
+
+app.listen(3000, () => {
+  console.log('listening on *:3000');
+});
+
+interface IWallet {
+    publicKey: string;
+    privateKey: string;
+    coin: number;
+}
+
+
 class Wallet {
     public publicKey: string;
     public privateKey: string;
@@ -37,8 +55,8 @@ class Wallet {
 // The blockchain
 class Chain {
   // Singleton instance
-  public static instance = new Chain();
-
+  public static instance = new Chain(); 
+  accounts: IWallet[] = [];
   chain: Block[];
 
   constructor() {
@@ -85,6 +103,7 @@ class Chain {
       const newBlock = new Block(this.chain.length+1,this.lastBlock.hash, transaction);
       this.mine(newBlock.nonce);
       this.chain.push(newBlock);
+      this.accounts.push({publicKey: senderPublicKey, privateKey: '', coin: transaction.amount});
     }
   }
 
@@ -95,7 +114,3 @@ class Chain {
 const satoshi = new Wallet();
 const bob = new Wallet();
 const alice = new Wallet();
-
-satoshi.sendMoney(50, bob.publicKey);
-
-console.log(bob.readProps());
