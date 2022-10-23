@@ -7,10 +7,24 @@
     <title>Let's Play</title>
 </head>
 <body>
-    <h1>Your Points</h1>
-    <p id="points">0</p>
-    <input type="text" placeholder="Opponent's address" required />
-    <button onclick="pay()">Pay to User</button>
+  <div>
+    <h1>Won points?</h1>
+    <p>This is your address.</p>
+    <p id="address"></p>
+  </div> 
+    <form onsubmit="pay()">
+      <h1>Your Points</h1>
+      <p id="points">0</p>
+      <input type="text" placeholder="Opponent's address" required />
+      <input type="submit" id="sendMoney" value="Pay to User">
+    </form>  
+    <div>
+      <h1>
+        Chat
+      </h1>
+      <div id="chat"></div>
+      <input type="text" placeholder="Message" required />
+  </div>
 </body>
 
 
@@ -22,19 +36,21 @@
 
   socket.on("info", function(data){
     points = data.info.coin;
+    address = data.info.publicKey;
+    document.getElementById("address").innerHTML = address;
     document.getElementById("points").innerHTML = parseInt(points);
   });
-  console.log("Connected to server");
-  function pay(){
-    if(points > 0){
-      socket.emit("pay", {coin: 25});
-      points-=25;
 
-      document.getElementById("points").innerHTML = points >= 0 ? parseInt(points):0;
-    }else if (points == 0){
-      alert("You just lost all your points");
-    }
-  }   
+  document.getElementById("sendMoney").addEventListener("click", function(event){
+    event.preventDefault();
+      if(points > 0){
+        socket.emit("pay", {coin: 25});
+      }else if (points == 0){
+        socket.emit("eliminate", {socket: socket.id});
+        alert("You just lost all your points");
+      }
+  });
+
 </script>
 <!--END OF MOVE-->
 </html>

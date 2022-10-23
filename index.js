@@ -20,6 +20,10 @@ io.on('connection', (socket) => {
     insert = { id: socket.id, name: 'player', info: wallet };
     connected.push(insert);
     io.emit("info", insert);
+    socket.on('pay', (payeeAdd) => {
+        wallet.sendMoney(25, "payeeAdd");
+        io.emit("info", insert);
+    });
     socket.on('disconnect', () => {
         let b = _.findIndex(connected, function (el) { return el.id == socket.id; });
         connected.splice(b, 1);

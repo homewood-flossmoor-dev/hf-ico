@@ -26,7 +26,7 @@ export class Wallet {
   
       const signature = sign.sign(this.privateKey); 
       Chain.instance.addBlock(transaction, this.publicKey, signature,payeePublicKey);
-      console.log(Chain.instance);
+      this.coin -= amount;
     }
     readProps(){
       return this.coin;

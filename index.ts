@@ -33,8 +33,8 @@ app.get('/play', (req: any, res:any) => {
 
     io.emit("info", insert);
     socket.on('pay', (payeeAdd: string) => {
-      wallet.sendMoney(25, 'player');
-    
+      wallet.sendMoney(25, "payeeAdd");
+      io.emit("info", insert);
     });
 
     socket.on('disconnect', ()=>{
