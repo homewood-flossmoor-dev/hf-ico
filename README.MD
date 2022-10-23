@@ -5,9 +5,8 @@ A simple blockchain and cryptocurrency wallet implemented in Node.js and TypeScr
 
 # Usage
 
-```
-git clone <this-repo>
+This project is meant to be used as a points system,
+for programming competitions that will be held at HF.
 
-npm install
-npm start
-```
+this repository is NOT a cryptocurrency nor a `production-ready`
+project.
