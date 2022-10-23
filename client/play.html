@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Let's Play</title>
+</head>
+<body>
+    <h1>Your Points</h1>
+    <p id="points">0</p>
+    <button onclick="pay()">Pay to User</button>
+</body>
+
+
+<!--TODO: Move all this to separate files-->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+
+  let points = 0;
+  var socket = io();
+
+  socket.on("info", function(data){
+    points = data.coin;
+    document.getElementById("points").innerHTML = parseInt(points);
+  });
+  console.log("Connected to server");
+  function pay(){
+    if(points > 0){
+      socket.emit("pay", {coin: 25});
+      points-=25;
+      document.getElementById("points").innerHTML = points >= 0 ? parseInt(points):0;
+    }else if (points == 0){
+      alert("You just lost all your points");
+    }
+  }   
+</script>
+<!--END OF MOVE-->
+</html>
