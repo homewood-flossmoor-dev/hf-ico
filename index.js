@@ -29,12 +29,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const crypto = __importStar(require("crypto"));
 const Block_1 = __importDefault(require("./lib/Block"));
 const Transaction_1 = __importDefault(require("./lib/Transaction"));
-const express_1 = __importDefault(require("express"));
-const app = (0, express_1.default)();
+const express = require('express');
+const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
 app.get('/', (req, res) => {
-    res.send('<h1>Hello world</h1>');
+    res.send("<body>" +
+        "<h1>Hello World</h1>" +
+        "</body>"
+        + "<script src='/socket.io/socket.io.js'></script><script>var socket = io();</script>");
 });
-app.listen(3000, () => {
+io.on('connection', (socket) => {
+    console.log('a user connected');
+});
+server.listen(3000, () => {
     console.log('listening on *:3000');
 });
 class Wallet {

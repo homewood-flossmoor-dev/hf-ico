@@ -1,16 +1,23 @@
 import * as crypto from 'crypto';
+import { Socket } from 'socket.io';
 import Block from './lib/Block';
 import Transaction from './lib/Transaction';
-import express from "express";
-
+const express = require('express');
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
 
-
-app.get('/', (req, res) => {
-  res.send('<h1>Hello world</h1>');
+app.get('/', (req: any, res:any) => {
+  res.send("");
 });
 
-app.listen(3000, () => {
+io.on('connection', (socket: Socket) => {
+  console.log('a user connected');
+});
+
+server.listen(3000, () => {
   console.log('listening on *:3000');
 });
 
