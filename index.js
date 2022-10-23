@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const Wallet_1 = require("./lib/Wallet");
 const express = require('express');
 const app = express();
 const http = require('http');
@@ -15,14 +16,14 @@ app.get('/play', (req, res) => {
 //waiting for connections on the play route
 let insert = {};
 io.on('connection', (socket) => {
-    insert = { id: socket.id, name: 'player', coin: 200 };
+    const wallet = new Wallet_1.Wallet();
+    insert = { id: socket.id, name: 'player', info: wallet };
     connected.push(insert);
     io.emit("info", insert);
     socket.on('disconnect', () => {
         let b = _.findIndex(connected, function (el) { return el.id == socket.id; });
         connected.splice(b, 1);
     });
-    console.log(connected);
 });
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/client/index.html');

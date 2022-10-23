@@ -5,7 +5,7 @@ import { Chain } from './Chain';
 export class Wallet {
     public publicKey: string;
     public privateKey: string;
-    public coin:number = 0;
+    public coin:number = 100;
   
     constructor() {
       const keypair = crypto.generateKeyPairSync('rsa', {
@@ -26,6 +26,7 @@ export class Wallet {
   
       const signature = sign.sign(this.privateKey); 
       Chain.instance.addBlock(transaction, this.publicKey, signature,payeePublicKey);
+      console.log(Chain.instance);
     }
     readProps(){
       return this.coin;

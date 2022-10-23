@@ -9,6 +9,7 @@
 <body>
     <h1>Your Points</h1>
     <p id="points">0</p>
+    <input type="text" placeholder="Opponent's address" required />
     <button onclick="pay()">Pay to User</button>
 </body>
 
@@ -16,12 +17,11 @@
 <!--TODO: Move all this to separate files-->
 <script src="/socket.io/socket.io.js"></script>
 <script>
-
   let points = 0;
   var socket = io();
 
   socket.on("info", function(data){
-    points = data.coin;
+    points = data.info.coin;
     document.getElementById("points").innerHTML = parseInt(points);
   });
   console.log("Connected to server");
@@ -29,6 +29,7 @@
     if(points > 0){
       socket.emit("pay", {coin: 25});
       points-=25;
+
       document.getElementById("points").innerHTML = points >= 0 ? parseInt(points):0;
     }else if (points == 0){
       alert("You just lost all your points");
