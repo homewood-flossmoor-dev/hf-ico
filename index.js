@@ -22,35 +22,34 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto = __importStar(require("crypto"));
-// Transfer of funds between two wallets
-class Transaction {
-    constructor(amount, payer, // public key
-    payee // public key
-    ) {
-        this.amount = amount;
-        this.payer = payer;
-        this.payee = payee;
+const Block_1 = __importDefault(require("./lib/Block"));
+const Transaction_1 = __importDefault(require("./lib/Transaction"));
+//wallet
+class Wallet {
+    constructor() {
+        this.coin = 0;
+        const keypair = crypto.generateKeyPairSync('rsa', {
+            modulusLength: 2048,
+            publicKeyEncoding: { type: 'spki', format: 'pem' },
+            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+        });
+        this.privateKey = keypair.privateKey;
+        this.publicKey = keypair.publicKey;
     }
-    toString() {
-        return JSON.stringify(this);
+    sendMoney(amount, payeePublicKey) {
+        const transaction = new Transaction_1.default(amount, this.publicKey, payeePublicKey);
+        const sign = crypto.createSign('SHA256');
+        sign.update(transaction.toString()).end();
+        const signature = sign.sign(this.privateKey);
+        Chain.instance.addBlock(transaction, this.publicKey, signature, payeePublicKey);
     }
-}
-// Individual block on the chain
-class Block {
-    constructor(index, prevHash, transaction, ts = Date.now()) {
-        this.index = index;
-        this.prevHash = prevHash;
-        this.transaction = transaction;
-        this.ts = ts;
-        this.nonce = Math.round(Math.random() * 999999999);
-    }
-    get hash() {
-        const str = JSON.stringify(this);
-        const hash = crypto.createHash('SHA256');
-        hash.update(str).end();
-        return hash.digest('hex');
+    readProps() {
+        return this.coin;
     }
 }
 // The blockchain
@@ -58,7 +57,7 @@ class Chain {
     constructor() {
         this.chain = [
             // Genesis block
-            new Block(0, '', new Transaction(100, 'genesis', 'satoshi'))
+            new Block_1.default(0, '', new Transaction_1.default(100, 'genesis', 'satoshi'))
         ];
     }
     // Most recent block
@@ -86,7 +85,7 @@ class Chain {
         verify.update(transaction.toString());
         const isValid = verify.verify(senderPublicKey, signature);
         if (isValid) {
-            const newBlock = new Block(this.chain.length + 1, this.lastBlock.hash, transaction);
+            const newBlock = new Block_1.default(this.chain.length + 1, this.lastBlock.hash, transaction);
             this.mine(newBlock.nonce);
             this.chain.push(newBlock);
         }
@@ -94,35 +93,9 @@ class Chain {
 }
 // Singleton instance
 Chain.instance = new Chain();
-// Wallet gives a user a public/private keypair
-class Wallet {
-    constructor() {
-        this.coin = 0;
-        const keypair = crypto.generateKeyPairSync('rsa', {
-            modulusLength: 2048,
-            publicKeyEncoding: { type: 'spki', format: 'pem' },
-            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-        });
-        this.privateKey = keypair.privateKey;
-        this.publicKey = keypair.publicKey;
-    }
-    sendMoney(amount, payeePublicKey) {
-        const transaction = new Transaction(amount, this.publicKey, payeePublicKey);
-        const sign = crypto.createSign('SHA256');
-        sign.update(transaction.toString()).end();
-        const signature = sign.sign(this.privateKey);
-        Chain.instance.addBlock(transaction, this.publicKey, signature, payeePublicKey);
-        if (this.publicKey == payeePublicKey) {
-            this.coin += amount;
-        }
-    }
-    readProps() {
-        return this.coin;
-    }
-}
 // Example usage
 const satoshi = new Wallet();
 const bob = new Wallet();
 const alice = new Wallet();
 satoshi.sendMoney(50, bob.publicKey);
-console.log('Satoshi balance is', bob.readProps());
+console.log(bob.readProps());

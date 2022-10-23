@@ -1,39 +1,38 @@
 import * as crypto from 'crypto';
+import Block from './lib/Block';
+import Transaction from './lib/Transaction';
 
-// Transfer of funds between two wallets
-class Transaction {
-  constructor(
-    public amount: number, 
-    public payer: string, // public key
-    public payee: string // public key
-  ) {}
-
-  toString() {
-    return JSON.stringify(this);
+//wallet
+class Wallet {
+    public publicKey: string;
+    public privateKey: string;
+    public coin:number = 0;
+  
+    constructor() {
+      const keypair = crypto.generateKeyPairSync('rsa', {
+        modulusLength: 2048,
+        publicKeyEncoding: { type: 'spki', format: 'pem' },
+        privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+      });
+  
+      this.privateKey = keypair.privateKey;
+      this.publicKey = keypair.publicKey;
+    }
+  
+    sendMoney(amount: number, payeePublicKey: string) {
+      const transaction = new Transaction(amount, this.publicKey, payeePublicKey);
+  
+      const sign = crypto.createSign('SHA256');
+      sign.update(transaction.toString()).end();
+  
+      const signature = sign.sign(this.privateKey); 
+      Chain.instance.addBlock(transaction, this.publicKey, signature,payeePublicKey);
+    }
+    readProps(){
+      return this.coin;
+    }
+  
   }
-
-}
-
-// Individual block on the chain
-class Block {
-
-  public nonce = Math.round(Math.random() * 999999999);
-
-  constructor(
-    public index : number,
-    public prevHash: string, 
-    public transaction: Transaction, 
-    public ts = Date.now()
-  ) {}
-
-  get hash() {
-    const str = JSON.stringify(this);
-    const hash = crypto.createHash('SHA256');
-    hash.update(str).end();
-    return hash.digest('hex');
-  }
-}
-
 
 // The blockchain
 class Chain {
@@ -91,38 +90,6 @@ class Chain {
 
 }
 
-// Wallet gives a user a public/private keypair
-class Wallet {
-  public publicKey: string;
-  public privateKey: string;
-  public coin:number = 0;
-
-  constructor() {
-    const keypair = crypto.generateKeyPairSync('rsa', {
-      modulusLength: 2048,
-      publicKeyEncoding: { type: 'spki', format: 'pem' },
-      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-    });
-
-    this.privateKey = keypair.privateKey;
-    this.publicKey = keypair.publicKey;
-  }
-
-  sendMoney(amount: number, payeePublicKey: string) {
-    const transaction = new Transaction(amount, this.publicKey, payeePublicKey);
-
-    const sign = crypto.createSign('SHA256');
-    sign.update(transaction.toString()).end();
-
-    const signature = sign.sign(this.privateKey); 
-    Chain.instance.addBlock(transaction, this.publicKey, signature,payeePublicKey);
-  }
-  readProps(){
-    return this.coin;
-  }
-
-}
-
 // Example usage
 
 const satoshi = new Wallet();
@@ -130,4 +97,5 @@ const bob = new Wallet();
 const alice = new Wallet();
 
 satoshi.sendMoney(50, bob.publicKey);
-console.log('Bob balance is', bob.readProps());
+
+console.log(bob.readProps());
