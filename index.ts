@@ -14,12 +14,19 @@ interface User {
   name: string;
   info: Wallet;
 }
-const connected : User[] = []; 
 
+interface  Room{
+  id: string;
+  full: boolean;
+  users: User[];
+}
+
+const connected : User[] = []; 
+const rooms : Room[] = [];
 app.use(express.static(__dirname));
 
 
-app.get('/play', (req: any, res:any) => {
+app.get('/play/:username', (req: any, res:any) => {
   res.sendFile(__dirname + '/client/play.html');
 });
 
@@ -38,17 +45,40 @@ app.get('/admin', (req: any, res:any) => {
 
     connected.push(insert);
 
+    //checking for the rooms
+    if(rooms.length === 0){
+      
+      socket.join('room'+rooms.length);
+      rooms.push({id: 'room'+rooms.length, full: false, users: [insert]});
+    
+    }else if(rooms[rooms.length-1].full){
+      
+      socket.join('room'+rooms.length);
+      rooms.push({id: 'room'+rooms.length, full: false, users: [insert]});
+    
+    }else{
+      
+      rooms[rooms.length-1].full = true;
+      socket.join('room'+(rooms.length-1));
+  
+    }
+
     io.emit("info", insert);
+
+    console.log(rooms);
+    
+    //waiting for pay event
     socket.on('pay', (payeeAdd: string) => {
-      wallet.sendMoney(25, "payeeAdd");
-      io.emit("info", insert);
-      io.emit("blocks", Chain.instance);
+        console.log(payeeAdd);
     });
 
+    //waiting for disconnect event
     socket.on('disconnect', ()=>{
       let b = _.findIndex(connected, function(el:User) { return el.id == socket.id; });
       connected.splice(b, 1);
     })
+
+
   });
   
   

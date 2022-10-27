@@ -1,9 +1,5 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const Chain_1 = __importDefault(require("./lib/Chain"));
 const Wallet_1 = require("./lib/Wallet");
 const express = require('express');
 const app = express();
@@ -13,8 +9,9 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const _ = require('lodash');
 const connected = [];
+const rooms = [];
 app.use(express.static(__dirname));
-app.get('/play', (req, res) => {
+app.get('/play/:username', (req, res) => {
     res.sendFile(__dirname + '/client/play.html');
 });
 app.get('/admin', (req, res) => {
@@ -23,15 +20,25 @@ app.get('/admin', (req, res) => {
 //waiting for connections on the play route
 let insert = {};
 io.on('connection', (socket) => {
-    const wallet = new Wallet_1.Wallet();
+    const wallet = new Wallet_1.Wallet(socket.id);
     insert = { id: socket.id, name: 'player', info: wallet };
     connected.push(insert);
+    if (rooms.length === 0) {
+        socket.join('room' + rooms.length);
+        rooms.push({ id: 'room' + rooms.length, full: false, users: [insert] });
+    }
+    else if (rooms[rooms.length - 1].full) {
+        socket.join('room' + rooms.length);
+        rooms.push({ id: 'room' + rooms.length, full: false, users: [insert] });
+    }
+    else {
+        rooms[rooms.length - 1].full = true;
+        socket.join('room' + (rooms.length - 1));
+    }
     io.emit("info", insert);
+    console.log(rooms);
     socket.on('pay', (payeeAdd) => {
-        wallet.sendMoney(25, "payeeAdd");
-        io.emit("info", insert);
-        console.log(Chain_1.default.instance);
-        io.emit("blocks", Chain_1.default.instance);
+        console.log(payeeAdd);
     });
     socket.on('disconnect', () => {
         let b = _.findIndex(connected, function (el) { return el.id == socket.id; });
